@@ -38,6 +38,7 @@
     "codesign": "0.0.9",
     "electron": "^6.0.0",
     "electron-builder": "^21.1.5",
+    "electron-packager": "^14.0.4",
     "electron-reload": "^1.4.1",
     "jasmine-core": "~3.4.0",
     "jasmine-spec-reporter": "~4.2.1",
@@ -77,8 +78,8 @@
     "start": "npm run postinstall:electron && npm-run-all -p ng:serve electron:serve",
     "test": "npm run postinstall:web && ng test",
     "version": "conventional-changelog -i CHANGELOG.md -s -r 0 && git add CHANGELOG.md",
-    "package:win": "electron-packager . --platform=win32 --icon=dust/favicon.ico",
-    "package:mac": "electron-packager . --platform=darwin --icon=./dist/favicon.icns"
+    "package:win": "electron-packager . --platform=win32 --icon=./dist/favicon.ico --force",
+    "package:mac": "electron-packager . --platform=darwin --icon=./dist/favicon.icns --force"
   },
   "version": "0.0.1",
   "engines": {
