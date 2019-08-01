@@ -1,105 +1,104 @@
-// Modules to control application life and create native browser window
-const {
-  app,
-  BrowserWindow
-} = require('electron')
-const path = require('path')
-const SerialPort = require('serialport');
-const {
-  ipcMain
-} = require('electron');
-const url = require('url')
-
-let portName = '/dev/cu.SLAB_USBtoUART';
-let command = 'at+txc=1,1000,FF00000000\r\n';
-let port;
-
-let mainWindow
-
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var electron_1 = require("electron");
+var path = require("path");
+var url = require("url");
+var SerialPort = require("serialport");
+var port;
+var mainWindow;
+var serve;
+var retryConnection = 0;
+var argsRoot = process.argv.slice(1);
+serve = argsRoot.some(function (val) { return val === '--serve'; });
 function createWindow() {
-  // Create the browser window.
-  mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    webPreferences: {
-      nodeIntegration: true
+    mainWindow = new electron_1.BrowserWindow({
+        width: 800,
+        height: 600,
+        webPreferences: { nodeIntegration: true, webSecurity: false }
+    });
+    if (serve) {
+        require('electron-reload')(__dirname, {
+            electron: require(__dirname + "/node_modules/electron")
+        });
+        mainWindow.loadURL('http://localhost:4200');
     }
-  })
-
-
-  mainWindow.loadURL(
-    url.format({
-      pathname: path.join(__dirname, 'dist/cnp/index.html'),
-      protocol: 'file:',
-      slashes: true,
-    })
-  )
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools()
-
-  mainWindow.on('closed', () => {
-    mainWindow = null
-    port.close();
-  });
-
-  initLora();
-}
-
-app.on('ready', createWindow)
-
-app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') app.quit()
-})
-
-app.on('activate', function () {
-  if (mainWindow === null) createWindow()
-})
-
-function initLora() {
-  port = new SerialPort(portName, {
-      baudRate: 115200
-    })
-    .on('open', () => {
-      console.log(`[${portName}]: open`);
-      port.set({
-        dtr: true,
-        dsr: true
-      });
-      sendCommand();
-    })
-    .on('data', data => {
-      console.log(`[${portName}]: data: ${Buffer.from(data).toString()}`);
-    })
-    .on('error', err => {
-      console.log(`[${portName}]: ${err}`);
-      process.exit();
+    else {
+        mainWindow.loadURL(url.format({
+            pathname: path.join(__dirname, './dist/index.html'),
+            protocol: 'file:',
+            slashes: true
+        }));
+    }
+    // Open the DevTools.
+    mainWindow.webContents.openDevTools();
+    mainWindow.on('closed', function () {
+        mainWindow = null;
+        if (port) {
+            port.close();
+        }
     });
 }
-
-function listPorts() {
-  SerialPort.list().then(ports => {
-    ipcMain.emit('serialport:list:result', {
-      ports
-    });
-  });
-}
-
-function sendCommand() {
-  port.write(command);
-}
-
-ipcMain.on('serialport:list:action', (event, arg) => {
-  listPorts();
-});
-
-ipcMain.on('serialport:command:send', (event, arg) => {
-  console.log(event);
-  console.log(arg);
-  sendCommand();
-  ipcMain.emit('serialport:command:result', {
-    ports: {
-      a: 'asa'
+electron_1.app.on('ready', createWindow);
+electron_1.app.on('window-all-closed', function () {
+    if (process.platform !== 'darwin') {
+        electron_1.app.quit();
     }
-  });
 });
+electron_1.app.on('activate', function () {
+    if (mainWindow === null) {
+        createWindow();
+    }
+});
+electron_1.ipcMain.on('serialport:port:connect', function (event, args) {
+    var comName = args[0];
+    retryConnection = 0;
+    openPort(comName, event);
+});
+electron_1.ipcMain.on('serialport:port:close', function (event, args) {
+    port.close(function (err) {
+        event.reply('serialport:port:closed');
+    });
+});
+electron_1.ipcMain.on('serialport:list:action', function (event) {
+    SerialPort.list().then(function (ports) {
+        event.reply('serialport:list:result', {
+            ports: ports
+        });
+    });
+});
+electron_1.ipcMain.on('serialport:command:send', function (event, args) {
+    var room = args[0].room;
+    var active = room.value ? 1 : 0;
+    var command = "at+txc=1,1000," + room.node + "0000000" + active + "\r\n";
+    port.write(command);
+    event.reply('serialport:command:result', room);
+});
+function openPort(comName, event) {
+    retryConnection++;
+    console.log('retry', retryConnection);
+    port = new SerialPort(comName, {
+        baudRate: 115200
+    })
+        .on('open', function () {
+        console.log("[" + comName + "]: opened");
+        port.set({
+            dtr: true,
+            dsr: true
+        });
+        event.reply('serialport:port:open', comName);
+    })
+        .on('data', function (data) {
+        // console.log(`[${comName}]: data: ${Buffer.from(data).toString()}`);
+    })
+        .on('error', function (err) {
+        console.log('err', err);
+        if (port.isOpen) {
+            port.close();
+        }
+        if (err.message.includes('Error Resource temporarily unavailable') && retryConnection < 3) {
+            openPort(comName, event);
+        }
+        process.exit();
+    });
+}
+//# sourceMappingURL=main.js.map

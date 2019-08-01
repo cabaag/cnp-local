@@ -15,18 +15,18 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    webPreferences: { nodeIntegration: true }
+    webPreferences: { nodeIntegration: true, webSecurity: false }
   });
 
   if (serve) {
     require('electron-reload')(__dirname, {
-      electron: require(path.join(__dirname, '../../node_modules/electron'))
+      electron: require(`${__dirname}/node_modules/electron`)
     });
     mainWindow.loadURL('http://localhost:4200');
   } else {
     mainWindow.loadURL(
       url.format({
-        pathname: path.join(__dirname, '../../dist/cnp/index.html'),
+        pathname: path.join(__dirname, './dist/index.html'),
         protocol: 'file:',
         slashes: true
       })
