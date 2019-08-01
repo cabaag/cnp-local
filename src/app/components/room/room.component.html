@@ -1,3 +1,3 @@
-<button matRipple class="room" [ngClass]="{ active: room.value }" (click)="update(room)">
+<button matRipple class="room" [ngClass]="{ active: room.value }" (click)="update(room)" [disabled]="disabled">
   {{ room.name }}
 </button>

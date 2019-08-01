@@ -21,7 +21,7 @@
     Salas
   </mat-toolbar>
   <div fxLayout="row wrap" fxLayoutGap="8px">
-    <app-room *ngFor="let room of rooms | async" [room]="room"> </app-room>
+    <app-room *ngFor="let room of rooms | async" [room]="room" [disabled]="!!selectedPort"> </app-room>
   </div>
 </div>
 

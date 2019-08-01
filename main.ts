@@ -82,7 +82,9 @@ ipcMain.on('serialport:command:send', (event, args: [{ room: any }]) => {
   const active = room.value ? 1 : 0;
 
   const command = `at+txc=1,1000,${room.node}0000000${active}\r\n`;
-  port.write(command);
+  if (port) {
+    port.write(command);
+  }
   event.reply('serialport:command:result', room);
 });
 

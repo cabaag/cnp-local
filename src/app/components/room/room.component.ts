@@ -10,6 +10,7 @@ import { IpcService } from 'src/app/services/ipc.service';
 })
 export class RoomComponent {
   @Input() room: Room;
+  @Input() disabled: boolean;
   constructor(private afs: AngularFirestore, private ipc: IpcService) {}
 
   update(room: Room) {
