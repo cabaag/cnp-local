@@ -6,8 +6,6 @@ import { ElectronService } from 'ngx-electron';
   providedIn: 'root'
 })
 export class IpcService {
-  private _ipc: IpcRenderer | undefined;
-
   constructor(private electronService: ElectronService) {}
 
   public on(channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void): IpcRenderer {

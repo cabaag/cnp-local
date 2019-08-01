@@ -35,6 +35,7 @@
     "@types/jasminewd2": "~2.0.3",
     "@types/serialport": "^7.0.4",
     "codelyzer": "^5.0.0",
+    "codesign": "0.0.9",
     "electron": "^6.0.0",
     "electron-builder": "^21.1.5",
     "electron-reload": "^1.4.1",
@@ -53,12 +54,12 @@
     "wait-on": "^3.3.0"
   },
   "main": "main.js",
-  "name": "cnp-local",
+  "name": "cnp",
   "private": true,
   "scripts": {
     "build": "npm run postinstall:electron && npm run electron:serve-tsc && ng build",
     "build:dev": "npm run build -- -c dev",
-    "build:prod": "npm run build -- -c production --base-href ./",
+    "build:prod": "npm run build -- -c production --base-href ./ && npm run electron:serve-tsc",
     "e2e": "npm run build:prod && mocha --timeout 300000 --require ts-node/register e2e/**/*.spec.ts",
     "electron:linux": "npm run build:prod && electron-builder build --linux",
     "electron:local": "npm run build:prod && electron .",
@@ -76,8 +77,8 @@
     "start": "npm run postinstall:electron && npm-run-all -p ng:serve electron:serve",
     "test": "npm run postinstall:web && ng test",
     "version": "conventional-changelog -i CHANGELOG.md -s -r 0 && git add CHANGELOG.md",
-    "package:win": "electron-packager . --platform=win32",
-    "package:mac": "electron-packager . --platform=darwin"
+    "package:win": "electron-packager . --platform=win32 --icon=dust/favicon.ico",
+    "package:mac": "electron-packager . --platform=darwin --icon=./dist/favicon.icns"
   },
   "version": "0.0.1",
   "engines": {

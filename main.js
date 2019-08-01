@@ -4,7 +4,9 @@ var electron_1 = require("electron");
 var path = require("path");
 var url = require("url");
 var SerialPort = require("serialport");
+var electron = require('electron');
 var port;
+console.log(electron_1.ipcRenderer);
 var mainWindow;
 var serve;
 var retryConnection = 0;
@@ -66,11 +68,22 @@ electron_1.ipcMain.on('serialport:list:action', function (event) {
         });
     });
 });
+electron_1.ipcMain.on('serialport:command:turnOnAll', function () {
+    var command = "at+txc=1,1000,FF00000001\r\n";
+    if (!!port) {
+        port.write(command);
+    }
+});
+electron_1.ipcMain.on('serialport:command:turnOffAll', function () {
+    var command = "at+txc=1,1000,FF00000000\r\n";
+    if (!!port) {
+        port.write(command);
+    }
+});
 electron_1.ipcMain.on('serialport:command:send', function (event, args) {
     var room = args[0].room;
     var active = room.value ? 1 : 0;
     var command = "at+txc=1,1000," + room.node + "0000000" + active + "\r\n";
-    console.log(port);
     if (!!port) {
         port.write(command);
     }
@@ -78,9 +91,9 @@ electron_1.ipcMain.on('serialport:command:send', function (event, args) {
 });
 function openPort(comName, event) {
     retryConnection++;
-    console.log('retry', retryConnection);
     port = new SerialPort(comName, {
-        baudRate: 115200
+        baudRate: 115200,
+        lock: false
     })
         .on('open', function () {
         console.log("[" + comName + "]: opened");
@@ -91,7 +104,11 @@ function openPort(comName, event) {
         event.reply('serialport:port:open', comName);
     })
         .on('data', function (data) {
-        // console.log(`[${comName}]: data: ${Buffer.from(data).toString()}`);
+        var message = Buffer.from(data).toString();
+        if (message.includes('Welcome to RAK811')) {
+            mainWindow.webContents.send('serialport:port:welcome');
+        }
+        console.log("[" + comName + "]: data: " + Buffer.from(data).toString());
     })
         .on('error', function (err) {
         console.log('err', err);

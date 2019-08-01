@@ -10,18 +10,26 @@
   <div *ngIf="!selectedPort" fxLayout="row" fxLayoutGap="8px">
     <app-port *ngFor="let port of ports" [port]="port"> </app-port>
   </div>
-  <div *ngIf="selectedPort" fxLayout fxLayoutAlign="end center" fxLayoutGap="8px">
-    <span>
-      {{ selectedPort }}
-    </span>
-    <button mat-stroked-button (click)="closePort()">Desconectar</button>
-  </div>
+
+  <mat-toolbar *ngIf="selectedPort">
+    <mat-toolbar-row>
+      <span> {{ selectedPort }} </span>
+      <span class="example-spacer"></span>
+      <button mat-stroked-button (click)="closePort()">Desconectar</button>
+    </mat-toolbar-row>
+    <mat-toolbar-row *ngIf="!loraMode">
+      Presione el botón de reset para activar
+    </mat-toolbar-row>
+  </mat-toolbar>
 
   <mat-toolbar>
-    Salas
+    <span> Salas </span>
+    <span class="example-spacer"></span>
+    <button mat-stroked-button color="warn" (click)="turnOffAll()">Apagar todos</button>
+    <button mat-stroked-button color="primary" (click)="turnOnAll()">Encender todos</button>
   </mat-toolbar>
   <div fxLayout="row wrap" fxLayoutGap="8px">
-    <app-room *ngFor="let room of rooms | async" [room]="room" [disabled]="!!selectedPort"> </app-room>
+    <app-room *ngFor="let room of rooms | async" [room]="room" [disabled]="!selectedPort && !loraMode"> </app-room>
   </div>
 </div>
 

@@ -1,7 +1,7 @@
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/firestore';
 import { Component, NgZone, OnDestroy, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { IpcService } from './services/ipc.service';
-import { map, takeWhile } from 'rxjs/operators';
+import { map, takeWhile, take } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { Port } from './interfaces/port';
 import { Room } from './interfaces/room';
@@ -20,6 +20,7 @@ export class AppComponent implements OnInit, OnDestroy {
   rooms: Observable<Room[]>;
   roomsCollection: AngularFirestoreCollection;
   selectedPort: string;
+  loraMode = false;
 
   constructor(
     private readonly ipc: IpcService,
@@ -48,7 +49,6 @@ export class AppComponent implements OnInit, OnDestroy {
               room
             });
           }
-          // console.log(a);
           return room;
         })
       )
@@ -76,6 +76,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.ipc.on('serialport:port:closed', () => {
       this.ngZone.run(() => {
         this.selectedPort = null;
+        this.loraMode = false;
         this.storage.clear('port');
         this.matSnackbar.open('Puerto desconectado', null, {
           duration: 3000,
@@ -87,9 +88,14 @@ export class AppComponent implements OnInit, OnDestroy {
     });
     this.ipc.on('serialport:command:result', (event, args: Room) => {
       const room = args;
-      console.log(args);
       this.firestore.doc<Room>('rooms/' + room.id).update({
         value: room.value
+      });
+    });
+    this.ipc.on('serialport:port:welcome', () => {
+      this.ngZone.run(() => {
+        this.loraMode = true;
+        this.cdr.markForCheck();
       });
     });
     this.ipc.send('serialport:list:action');
@@ -106,5 +112,27 @@ export class AppComponent implements OnInit, OnDestroy {
 
   closePort() {
     this.ipc.send('serialport:port:close');
+  }
+
+  turnOffAll() {
+    this.ipc.send('serialport:command:turnOffAll');
+    this.rooms.pipe(take(1)).subscribe(rooms => {
+      rooms.forEach(room => {
+        this.firestore.doc('rooms/' + room.id).update({
+          value: false
+        });
+      });
+    });
+  }
+
+  turnOnAll() {
+    this.ipc.send('serialport:command:turnOnAll');
+    this.rooms.pipe(take(1)).subscribe(rooms => {
+      rooms.forEach(room => {
+        this.firestore.doc('rooms/' + room.id).update({
+          value: true
+        });
+      });
+    });
   }
 }
