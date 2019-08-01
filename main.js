@@ -21,6 +21,8 @@ function createWindow() {
             electron: require(__dirname + "/node_modules/electron")
         });
         mainWindow.loadURL('http://localhost:4200');
+        // Open the DevTools.
+        mainWindow.webContents.openDevTools();
     }
     else {
         mainWindow.loadURL(url.format({
@@ -29,8 +31,6 @@ function createWindow() {
             slashes: true
         }));
     }
-    // Open the DevTools.
-    mainWindow.webContents.openDevTools();
     mainWindow.on('closed', function () {
         mainWindow = null;
         if (port) {
@@ -70,7 +70,10 @@ electron_1.ipcMain.on('serialport:command:send', function (event, args) {
     var room = args[0].room;
     var active = room.value ? 1 : 0;
     var command = "at+txc=1,1000," + room.node + "0000000" + active + "\r\n";
-    port.write(command);
+    console.log(port);
+    if (!!port) {
+        port.write(command);
+    }
     event.reply('serialport:command:result', room);
 });
 function openPort(comName, event) {

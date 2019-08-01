@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "baseUrl": "./",
-    "outDir": "./dist",
+    "outDir": ".",
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "node",

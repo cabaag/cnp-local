@@ -23,6 +23,8 @@ function createWindow() {
       electron: require(`${__dirname}/node_modules/electron`)
     });
     mainWindow.loadURL('http://localhost:4200');
+    // Open the DevTools.
+    mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadURL(
       url.format({
@@ -32,8 +34,6 @@ function createWindow() {
       })
     );
   }
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -82,7 +82,8 @@ ipcMain.on('serialport:command:send', (event, args: [{ room: any }]) => {
   const active = room.value ? 1 : 0;
 
   const command = `at+txc=1,1000,${room.node}0000000${active}\r\n`;
-  if (port) {
+  console.log(port);
+  if (!!port) {
     port.write(command);
   }
   event.reply('serialport:command:result', room);
