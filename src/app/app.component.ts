@@ -17,8 +17,9 @@ import { MatSnackBar } from '@angular/material';
 export class AppComponent implements OnInit, OnDestroy {
   ports: Port[];
   private alive = true;
-  rooms: Observable<Room[]>;
   roomsCollection: AngularFirestoreCollection;
+  roomsObs: Observable<Room[]>;
+  rooms: Room[];
   selectedPort: string;
   loraMode = false;
 
@@ -35,24 +36,34 @@ export class AppComponent implements OnInit, OnDestroy {
       this.ipc.send('serialport:port:connect', this.selectedPort);
     }
 
-    this.rooms = firestore.collection<Room>('rooms').valueChanges();
     this.roomsCollection = this.firestore.collection<Room>('rooms');
-    this.rooms = this.roomsCollection.snapshotChanges().pipe(
+    this.roomsObs = this.roomsCollection.snapshotChanges(['added', 'modified']).pipe(
       takeWhile(() => this.alive),
       map(actions =>
         actions.map(a => {
           const data = a.payload.doc.data() as Room;
           const id = a.payload.doc.id;
           const room = { id, ...data };
+
           if (a.type === 'modified') {
-            this.ipc.send('serialport:command:send', {
-              room
-            });
+            // Si el valor modificado es diferente al anterior, cambia el estado
+            if (this.rooms.find(r => r.id === id).value !== room.value) {
+              console.log(room.name, Date.now());
+              setTimeout(() => {
+                this.ipc.send('serialport:command:sendNoReturn', {
+                  room
+                });
+              }, 500);
+            }
           }
           return room;
         })
       )
     );
+    this.roomsObs.subscribe(r => {
+      this.rooms = r;
+      this.cdr.markForCheck();
+    });
   }
 
   ngOnInit() {
@@ -73,6 +84,7 @@ export class AppComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       });
     });
+
     this.ipc.on('serialport:port:closed', () => {
       this.ngZone.run(() => {
         this.selectedPort = null;
@@ -86,12 +98,14 @@ export class AppComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       });
     });
+
     this.ipc.on('serialport:command:result', (event, args: Room) => {
       const room = args;
       this.firestore.doc<Room>('rooms/' + room.id).update({
         value: room.value
       });
     });
+
     this.ipc.on('serialport:port:welcome', () => {
       this.ngZone.run(() => {
         this.loraMode = true;
@@ -115,24 +129,41 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   turnOffAll() {
+    this.rooms = this.rooms.map(room => {
+      room.value = false;
+      return room;
+    });
     this.ipc.send('serialport:command:turnOffAll');
-    this.rooms.pipe(take(1)).subscribe(rooms => {
-      rooms.forEach(room => {
-        this.firestore.doc('rooms/' + room.id).update({
+    this.rooms = this.rooms.map((room, index, array) => {
+      if (room.value) {
+        room.value = false;
+        array[index].value = false;
+        this.roomsCollection.doc(room.id).update({
           value: false
         });
-      });
+        this.cdr.markForCheck();
+      }
+      return room;
     });
   }
 
   turnOnAll() {
+    this.rooms = this.rooms.map(room => {
+      room.value = true;
+      return room;
+    });
+    console.log(this.rooms);
     this.ipc.send('serialport:command:turnOnAll');
-    this.rooms.pipe(take(1)).subscribe(rooms => {
-      rooms.forEach(room => {
-        this.firestore.doc('rooms/' + room.id).update({
+    this.rooms = this.rooms.map((room, index, array) => {
+      if (!room.value) {
+        room.value = true;
+        array[index].value = true;
+        this.roomsCollection.doc(room.id).update({
           value: true
         });
-      });
+        this.cdr.markForCheck();
+      }
+      return room;
     });
   }
 }

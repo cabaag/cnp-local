@@ -1,3 +1,4 @@
+<img src="assets/logo.png" alt="CNP" height="100" />
 <div class="mat-content" fxLayout="column" fxLayoutGap="20px">
   <mat-toolbar *ngIf="!selectedPort">
     <mat-toolbar-row>
@@ -26,12 +27,23 @@
     <span> Salas </span>
     <span class="example-spacer"></span>
     <span fxLayout fxLayoutGap="8px">
-      <button mat-stroked-button color="warn" (click)="turnOffAll()">Apagar todos</button>
-      <button mat-stroked-button color="primary" (click)="turnOnAll()">Encender todos</button>
+      <button mat-stroked-button color="warn" (click)="turnOffAll()" [disabled]="!selectedPort && !loraMode">
+        Apagar todos
+      </button>
+      <button mat-stroked-button color="primary" (click)="turnOnAll()" [disabled]="!selectedPort && !loraMode">
+        Encender todos
+      </button>
     </span>
   </mat-toolbar>
-  <div fxLayout="row wrap" fxLayoutGap="8px">
-    <app-room *ngFor="let room of rooms | async" [room]="room" [disabled]="!selectedPort && !loraMode"> </app-room>
+  <div fxLayout="row wrap">
+    <app-room
+      *ngFor="let room of rooms"
+      fxFlex.xs="50%"
+      fxFlex="25%"
+      [room]="room"
+      [disabled]="!selectedPort && !loraMode"
+    >
+    </app-room>
   </div>
 </div>
 

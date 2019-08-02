@@ -12,6 +12,7 @@ var serve;
 var retryConnection = 0;
 var argsRoot = process.argv.slice(1);
 serve = argsRoot.some(function (val) { return val === '--serve'; });
+var commands = [];
 function createWindow() {
     mainWindow = new electron_1.BrowserWindow({
         width: 800,
@@ -80,12 +81,30 @@ electron_1.ipcMain.on('serialport:command:turnOffAll', function () {
         port.write(command);
     }
 });
+electron_1.ipcMain.on('serialport:command:sendNoReturn', function (event, args) {
+    console.log('no return');
+    var room = args[0].room;
+    var active = room.value ? 1 : 0;
+    var command = "at+txc=1,1000," + room.node + "0000000" + active + "\r\n";
+    commands.push(command);
+    if (!!port) {
+        setTimeout(function () {
+            port.write(command);
+        }, 700 * commands.length);
+        setTimeout(function () {
+            commands = [];
+        }, 5000);
+    }
+});
 electron_1.ipcMain.on('serialport:command:send', function (event, args) {
+    console.log('return');
     var room = args[0].room;
     var active = room.value ? 1 : 0;
     var command = "at+txc=1,1000," + room.node + "0000000" + active + "\r\n";
     if (!!port) {
-        port.write(command);
+        setTimeout(function () {
+            port.write(command);
+        }, 400);
     }
     event.reply('serialport:command:result', room);
 });
@@ -104,11 +123,11 @@ function openPort(comName, event) {
         event.reply('serialport:port:open', comName);
     })
         .on('data', function (data) {
+        console.log("[" + comName + "]: data: " + Buffer.from(data).toString() + ", " + Date.now());
         var message = Buffer.from(data).toString();
         if (message.includes('Welcome to RAK811')) {
             mainWindow.webContents.send('serialport:port:welcome');
         }
-        console.log("[" + comName + "]: data: " + Buffer.from(data).toString());
     })
         .on('error', function (err) {
         console.log('err', err);
@@ -116,7 +135,10 @@ function openPort(comName, event) {
             port.close();
         }
         if (err.message.includes('Error Resource temporarily unavailable') && retryConnection < 3) {
-            openPort(comName, event);
+            return openPort(comName, event);
+        }
+        if (err.message.includes('No such file or directory')) {
+            return mainWindow.webContents.send('serialport:port:closed');
         }
         process.exit();
     });

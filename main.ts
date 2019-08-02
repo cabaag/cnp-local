@@ -11,6 +11,7 @@ let serve;
 let retryConnection = 0;
 const argsRoot = process.argv.slice(1);
 serve = argsRoot.some(val => val === '--serve');
+let commands = [];
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -92,13 +93,35 @@ ipcMain.on('serialport:command:turnOffAll', () => {
   }
 });
 
+ipcMain.on('serialport:command:sendNoReturn', (event, args: [{ room: any }]) => {
+  console.log('no return');
+  const room = args[0].room;
+  const active = room.value ? 1 : 0;
+
+  const command = `at+txc=1,1000,${room.node}0000000${active}\r\n`;
+  commands.push(command);
+
+  if (!!port) {
+    setTimeout(() => {
+      port.write(command);
+    }, 700 * commands.length);
+
+    setTimeout(() => {
+      commands = [];
+    }, 5000);
+  }
+});
+
 ipcMain.on('serialport:command:send', (event, args: [{ room: any }]) => {
+  console.log('return');
   const room = args[0].room;
   const active = room.value ? 1 : 0;
 
   const command = `at+txc=1,1000,${room.node}0000000${active}\r\n`;
   if (!!port) {
-    port.write(command);
+    setTimeout(() => {
+      port.write(command);
+    }, 400);
   }
   event.reply('serialport:command:result', room);
 });
@@ -118,19 +141,24 @@ function openPort(comName: string, event: IpcMainEvent) {
       event.reply('serialport:port:open', comName);
     })
     .on('data', data => {
+      console.log(`[${comName}]: data: ${Buffer.from(data).toString()}, ${Date.now()}`);
       const message = Buffer.from(data).toString();
       if (message.includes('Welcome to RAK811')) {
         mainWindow.webContents.send('serialport:port:welcome');
       }
-      console.log(`[${comName}]: data: ${Buffer.from(data).toString()}`);
     })
     .on('error', (err: Error) => {
       console.log('err', err);
       if (port.isOpen) {
         port.close();
       }
+
       if (err.message.includes('Error Resource temporarily unavailable') && retryConnection < 3) {
-        openPort(comName, event);
+        return openPort(comName, event);
+      }
+
+      if (err.message.includes('No such file or directory')) {
+        return mainWindow.webContents.send('serialport:port:closed');
       }
       process.exit();
     });

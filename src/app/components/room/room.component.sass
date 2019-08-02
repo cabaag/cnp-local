@@ -1,17 +1,19 @@
 @import '~@angular/material/theming'
 
+:host
+  display: flex
 button
   -webkit-appearance: none
   padding: 20px
-  margin-bottom: 8px
-  cursor: pointer
+  margin: 16px 8px
   outline: none
   border-radius: 6px
   border: 4px solid map-get($mat-grey, 300)
   transition: 400ms ease all
+  cursor: pointer
   font-size: 16px
   font-weight: bold
-  width: 200px
+  width: 100%
   &.active
     border: 4px solid map-get($mat-indigo, 300)
     background: map-get($mat-blue, 50)
