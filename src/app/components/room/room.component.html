@@ -1,3 +1,8 @@
 <button matRipple class="room" [ngClass]="{ active: room.value }" (click)="update(room)" [disabled]="disabled">
-  {{ room.name }}
+  <span *ngIf="!waiting" fxLayoutAlign="center" fxFlex>
+    {{ room.name }}
+  </span>
+  <span *ngIf="waiting" fxLayoutAlign="center" fxFlex>
+    <mat-progress-spinner mode="indeterminate" color="primary" diameter="20"></mat-progress-spinner>
+  </span>
 </button>

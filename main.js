@@ -4,9 +4,7 @@ var electron_1 = require("electron");
 var path = require("path");
 var url = require("url");
 var SerialPort = require("serialport");
-var electron = require('electron');
 var port;
-console.log(electron_1.ipcRenderer);
 var mainWindow;
 var serve;
 var retryConnection = 0;
@@ -69,16 +67,25 @@ electron_1.ipcMain.on('serialport:list:action', function (event) {
         });
     });
 });
-electron_1.ipcMain.on('serialport:command:turnOnAll', function () {
+electron_1.ipcMain.on('serialport:command:turnOnAll', function (event) {
+    console.log('Turn on all');
     var command = "at+txc=1,1000,FF00000001\r\n";
     if (!!port) {
         port.write(command);
+        setTimeout(function () {
+            console.log('Returning on all');
+            mainWindow.webContents.send('serialport:command:result', null);
+        }, 300);
     }
 });
-electron_1.ipcMain.on('serialport:command:turnOffAll', function () {
+electron_1.ipcMain.on('serialport:command:turnOffAll', function (event) {
     var command = "at+txc=1,1000,FF00000000\r\n";
     if (!!port) {
         port.write(command);
+        setTimeout(function () {
+            console.log('Returning off all');
+            mainWindow.webContents.send('serialport:command:result', null);
+        }, 300);
     }
 });
 electron_1.ipcMain.on('serialport:command:sendNoReturn', function (event, args) {
@@ -88,25 +95,21 @@ electron_1.ipcMain.on('serialport:command:sendNoReturn', function (event, args) 
     var command = "at+txc=1,1000," + room.node + "0000000" + active + "\r\n";
     commands.push(command);
     if (!!port) {
-        setTimeout(function () {
-            port.write(command);
-        }, 700 * commands.length);
-        setTimeout(function () {
-            commands = [];
-        }, 5000);
+        port.write(command);
+        console.log('drain');
     }
 });
 electron_1.ipcMain.on('serialport:command:send', function (event, args) {
-    console.log('return');
     var room = args[0].room;
     var active = room.value ? 1 : 0;
     var command = "at+txc=1,1000," + room.node + "0000000" + active + "\r\n";
     if (!!port) {
+        port.write(command);
         setTimeout(function () {
-            port.write(command);
-        }, 400);
+            console.log('return', room.name);
+            event.reply('serialport:command:result', room);
+        }, 300);
     }
-    event.reply('serialport:command:result', room);
 });
 function openPort(comName, event) {
     retryConnection++;
@@ -127,6 +130,7 @@ function openPort(comName, event) {
         var message = Buffer.from(data).toString();
         if (message.includes('Welcome to RAK811')) {
             mainWindow.webContents.send('serialport:port:welcome');
+            port.drain();
         }
     })
         .on('error', function (err) {

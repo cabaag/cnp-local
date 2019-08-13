@@ -12,7 +12,7 @@ import { MatSnackBar } from '@angular/material';
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.sass'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.Default
 })
 export class AppComponent implements OnInit, OnDestroy {
   ports: Port[];
@@ -22,6 +22,8 @@ export class AppComponent implements OnInit, OnDestroy {
   rooms: Room[];
   selectedPort: string;
   loraMode = false;
+  waitingResponse = false;
+  index = 0;
 
   constructor(
     private readonly ipc: IpcService,
@@ -45,24 +47,24 @@ export class AppComponent implements OnInit, OnDestroy {
           const id = a.payload.doc.id;
           const room = { id, ...data };
 
-          if (a.type === 'modified') {
-            // Si el valor modificado es diferente al anterior, cambia el estado
-            if (this.rooms.find(r => r.id === id).value !== room.value) {
-              console.log(room.name, Date.now());
-              setTimeout(() => {
-                this.ipc.send('serialport:command:sendNoReturn', {
-                  room
-                });
-              }, 500);
-            }
-          }
+          // if (a.type === 'modified' && room.emitter !== 'local) {
+          //   // Si el valor modificado es diferente al anterior, cambia el estado
+          //   if (this.rooms.find(r => r.id === id).value !== room.value) {
+          //     console.log(room.name, Date.now());
+          //     setTimeout(() => {
+          //       this.ipc.send('serialport:command:sendNoReturn', {
+          //         room
+          //       });
+          //     }, 500 * this.index);
+          //     this.index++;
+          //   }
+          // }
           return room;
         })
       )
     );
     this.roomsObs.subscribe(r => {
       this.rooms = r;
-      this.cdr.markForCheck();
     });
   }
 
@@ -70,9 +72,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.ipc.on('serialport:list:result', (event, args: { ports: Port[] }) => {
       this.ngZone.run(() => {
         this.ports = args.ports;
-        this.cdr.markForCheck();
       });
     });
+
     this.ipc.on('serialport:port:open', (event, comName: string) => {
       this.ngZone.run(() => {
         this.selectedPort = comName;
@@ -81,7 +83,6 @@ export class AppComponent implements OnInit, OnDestroy {
           verticalPosition: 'bottom',
           horizontalPosition: 'end'
         });
-        this.cdr.markForCheck();
       });
     });
 
@@ -95,21 +96,30 @@ export class AppComponent implements OnInit, OnDestroy {
           verticalPosition: 'bottom',
           horizontalPosition: 'end'
         });
-        this.cdr.markForCheck();
       });
     });
 
     this.ipc.on('serialport:command:result', (event, args: Room) => {
-      const room = args;
-      this.firestore.doc<Room>('rooms/' + room.id).update({
-        value: room.value
+      this.ngZone.run(() => {
+        const room = args;
+        console.log('Receiving', room);
+        if (room) {
+          this.firestore.doc<Room>('rooms/' + room.id).update({
+            value: room.value
+          });
+        }
+        this.waitingResponse = false;
+        console.log(this.waitingResponse);
+        this.cdr.markForCheck();
       });
     });
 
     this.ipc.on('serialport:port:welcome', () => {
       this.ngZone.run(() => {
         this.loraMode = true;
-        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.turnOnAll();
+        }, 500);
       });
     });
     this.ipc.send('serialport:list:action');
@@ -129,41 +139,43 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   turnOffAll() {
+    console.log('Turn off all');
     this.rooms = this.rooms.map(room => {
       room.value = false;
       return room;
     });
     this.ipc.send('serialport:command:turnOffAll');
+    this.commandSend();
     this.rooms = this.rooms.map((room, index, array) => {
-      if (room.value) {
-        room.value = false;
-        array[index].value = false;
-        this.roomsCollection.doc(room.id).update({
-          value: false
-        });
-        this.cdr.markForCheck();
-      }
+      room.value = false;
+      array[index].value = false;
+      this.roomsCollection.doc(room.id).update({
+        value: false
+      });
       return room;
     });
   }
 
   turnOnAll() {
+    console.log('Turn on all');
     this.rooms = this.rooms.map(room => {
       room.value = true;
       return room;
     });
-    console.log(this.rooms);
     this.ipc.send('serialport:command:turnOnAll');
+    this.commandSend();
     this.rooms = this.rooms.map((room, index, array) => {
-      if (!room.value) {
-        room.value = true;
-        array[index].value = true;
-        this.roomsCollection.doc(room.id).update({
-          value: true
-        });
-        this.cdr.markForCheck();
-      }
+      room.value = true;
+      array[index].value = true;
+      this.roomsCollection.doc(room.id).update({
+        value: true
+      });
       return room;
     });
+  }
+
+  commandSend() {
+    this.waitingResponse = true;
+    this.cdr.markForCheck();
   }
 }

@@ -1,5 +1,4 @@
-import { AngularFirestore } from '@angular/fire/firestore';
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { Room } from 'src/app/interfaces/room';
 import { IpcService } from 'src/app/services/ipc.service';
 
@@ -11,12 +10,17 @@ import { IpcService } from 'src/app/services/ipc.service';
 export class RoomComponent {
   @Input() room: Room;
   @Input() disabled: boolean;
-  constructor(private afs: AngularFirestore, private ipc: IpcService) {}
+  @Input() waiting: boolean;
+  @Output() commandSend = new EventEmitter();
+
+  constructor(private ipc: IpcService) {}
 
   update(room: Room) {
     room.value = !room.value;
+    room.emitter = 'local';
     this.ipc.send('serialport:command:send', {
       room
     });
+    this.commandSend.emit(true);
   }
 }

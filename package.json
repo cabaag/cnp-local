@@ -81,7 +81,7 @@
     "package:win": "electron-packager . --platform=win32 --icon=./dist/favicon.ico --force",
     "package:mac": "electron-packager . --platform=darwin --icon=./dist/favicon.icns --force"
   },
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "node": ">=10.9.0"
   }

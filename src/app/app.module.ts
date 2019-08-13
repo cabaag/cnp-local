@@ -11,7 +11,8 @@ import {
   MatListModule,
   MatToolbarModule,
   MatRippleModule,
-  MatSnackBarModule
+  MatSnackBarModule,
+  MatProgressSpinnerModule
 } from '@angular/material';
 import { NgModule } from '@angular/core';
 import { NgxElectronModule } from 'ngx-electron';
@@ -36,7 +37,8 @@ import { RoomComponent } from './components/room/room.component';
     MatListModule,
     MatRippleModule,
     MatSnackBarModule,
-    MatToolbarModule
+    MatToolbarModule,
+    MatProgressSpinnerModule
   ],
   providers: [IpcService],
   bootstrap: [AppComponent]

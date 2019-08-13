@@ -3,4 +3,5 @@ export interface Room {
   value: boolean;
   id: string;
   node: string;
+  emitter: string;
 }

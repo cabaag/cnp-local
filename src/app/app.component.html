@@ -8,43 +8,57 @@
     </mat-toolbar-row>
   </mat-toolbar>
 
-  <div *ngIf="!selectedPort" fxLayout="row" fxLayoutGap="8px">
-    <app-port *ngFor="let port of ports" [port]="port"> </app-port>
-  </div>
+  <div>
+    <div *ngIf="!selectedPort" fxLayout="row" fxLayoutGap="8px">
+      <app-port *ngFor="let port of ports" [port]="port"> </app-port>
+    </div>
 
-  <mat-toolbar *ngIf="selectedPort">
-    <mat-toolbar-row>
-      <span> {{ selectedPort }} </span>
+    <mat-toolbar *ngIf="selectedPort">
+      <mat-toolbar-row>
+        <span> {{ selectedPort }} </span>
+        <span class="example-spacer"></span>
+        <button mat-stroked-button (click)="closePort()">Desconectar</button>
+      </mat-toolbar-row>
+      <mat-toolbar-row *ngIf="!loraMode">
+        Presione el botón de reset para activar
+      </mat-toolbar-row>
+    </mat-toolbar>
+
+    <mat-toolbar>
+      <span> Salas </span>
       <span class="example-spacer"></span>
-      <button mat-stroked-button (click)="closePort()">Desconectar</button>
-    </mat-toolbar-row>
-    <mat-toolbar-row *ngIf="!loraMode">
-      Presione el botón de reset para activar
-    </mat-toolbar-row>
-  </mat-toolbar>
-
-  <mat-toolbar>
-    <span> Salas </span>
-    <span class="example-spacer"></span>
-    <span fxLayout fxLayoutGap="8px">
-      <button mat-stroked-button color="warn" (click)="turnOffAll()" [disabled]="!selectedPort && !loraMode">
-        Apagar todos
-      </button>
-      <button mat-stroked-button color="primary" (click)="turnOnAll()" [disabled]="!selectedPort && !loraMode">
-        Encender todos
-      </button>
-    </span>
-  </mat-toolbar>
-  <div fxLayout="row wrap">
-    <app-room
-      *ngFor="let room of rooms"
-      fxFlex.xs="50%"
-      fxFlex="25%"
-      [room]="room"
-      [disabled]="!selectedPort && !loraMode"
-    >
-    </app-room>
+      <span fxLayout fxLayoutGap="8px">
+        <button
+          mat-stroked-button
+          color="warn"
+          (click)="turnOffAll()"
+          [disabled]="waitingResponse || (!selectedPort && !loraMode)"
+        >
+          Apagar todos
+        </button>
+        <button
+          mat-stroked-button
+          color="primary"
+          (click)="turnOnAll()"
+          [disabled]="waitingResponse || (!selectedPort && !loraMode)"
+        >
+          Encender todos
+        </button>
+      </span>
+    </mat-toolbar>
+    <div fxLayout="row wrap">
+      <app-room
+        *ngFor="let room of rooms"
+        fxFlex.xs="50%"
+        fxFlex="25%"
+        [room]="room"
+        [disabled]="!selectedPort && !loraMode"
+        [waiting]="waitingResponse"
+        (commandSend)="commandSend()"
+      >
+      </app-room>
+    </div>
   </div>
-</div>
 
-<router-outlet></router-outlet>
+  <router-outlet></router-outlet>
+</div>
