@@ -9,7 +9,7 @@ let serve;
 let retryConnection = 0;
 const argsRoot = process.argv.slice(1);
 serve = argsRoot.some(val => val === '--serve');
-const commands = [];
+const intervalCommands = 700;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -85,7 +85,7 @@ ipcMain.on('serialport:command:turnOnAll', event => {
     setTimeout(() => {
       console.log('Returning on all');
       mainWindow.webContents.send('serialport:command:result', null);
-    }, 300);
+    }, intervalCommands);
   }
 });
 
@@ -96,7 +96,7 @@ ipcMain.on('serialport:command:turnOffAll', event => {
     setTimeout(() => {
       console.log('Returning off all');
       mainWindow.webContents.send('serialport:command:result', null);
-    }, 300);
+    }, intervalCommands);
   }
 });
 
@@ -106,7 +106,6 @@ ipcMain.on('serialport:command:sendNoReturn', (event, args: [{ room: any }]) => 
   const active = room.value ? 1 : 0;
 
   const command = `at+txc=1,1000,${room.node}0000000${active}\r\n`;
-  commands.push(command);
 
   if (!!port) {
     port.write(command);
@@ -124,7 +123,7 @@ ipcMain.on('serialport:command:send', (event, args: [{ room: any }]) => {
     setTimeout(() => {
       console.log('return', room.name);
       event.reply('serialport:command:result', room);
-    }, 300);
+    }, intervalCommands);
   }
 });
 
@@ -143,7 +142,7 @@ function openPort(comName: string, event: IpcMainEvent) {
       event.reply('serialport:port:open', comName);
     })
     .on('data', data => {
-      console.log(`[${comName}]: data: ${Buffer.from(data).toString()}, ${Date.now()}`);
+      // console.log(`[${comName}]: data: ${Buffer.from(data).toString()}, ${Date.now()}`);
       const message = Buffer.from(data).toString();
       if (message.includes('Welcome to RAK811')) {
         mainWindow.webContents.send('serialport:port:welcome');

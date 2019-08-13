@@ -11,6 +11,7 @@ var retryConnection = 0;
 var argsRoot = process.argv.slice(1);
 serve = argsRoot.some(function (val) { return val === '--serve'; });
 var commands = [];
+var intervalCommands = 1000;
 function createWindow() {
     mainWindow = new electron_1.BrowserWindow({
         width: 800,
@@ -75,7 +76,7 @@ electron_1.ipcMain.on('serialport:command:turnOnAll', function (event) {
         setTimeout(function () {
             console.log('Returning on all');
             mainWindow.webContents.send('serialport:command:result', null);
-        }, 300);
+        }, intervalCommands);
     }
 });
 electron_1.ipcMain.on('serialport:command:turnOffAll', function (event) {
@@ -85,7 +86,7 @@ electron_1.ipcMain.on('serialport:command:turnOffAll', function (event) {
         setTimeout(function () {
             console.log('Returning off all');
             mainWindow.webContents.send('serialport:command:result', null);
-        }, 300);
+        }, intervalCommands);
     }
 });
 electron_1.ipcMain.on('serialport:command:sendNoReturn', function (event, args) {
@@ -108,7 +109,7 @@ electron_1.ipcMain.on('serialport:command:send', function (event, args) {
         setTimeout(function () {
             console.log('return', room.name);
             event.reply('serialport:command:result', room);
-        }, 300);
+        }, intervalCommands);
     }
 });
 function openPort(comName, event) {
@@ -126,7 +127,7 @@ function openPort(comName, event) {
         event.reply('serialport:port:open', comName);
     })
         .on('data', function (data) {
-        console.log("[" + comName + "]: data: " + Buffer.from(data).toString() + ", " + Date.now());
+        // console.log(`[${comName}]: data: ${Buffer.from(data).toString()}, ${Date.now()}`);
         var message = Buffer.from(data).toString();
         if (message.includes('Welcome to RAK811')) {
             mainWindow.webContents.send('serialport:port:welcome');

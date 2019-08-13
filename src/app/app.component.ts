@@ -8,6 +8,8 @@ import { Room } from './interfaces/room';
 import { LocalStorageService } from 'ngx-webstorage';
 import { MatSnackBar } from '@angular/material';
 
+const intervalCommands = 700;
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -47,18 +49,16 @@ export class AppComponent implements OnInit, OnDestroy {
           const id = a.payload.doc.id;
           const room = { id, ...data };
 
-          // if (a.type === 'modified' && room.emitter !== 'local) {
-          //   // Si el valor modificado es diferente al anterior, cambia el estado
-          //   if (this.rooms.find(r => r.id === id).value !== room.value) {
-          //     console.log(room.name, Date.now());
-          //     setTimeout(() => {
-          //       this.ipc.send('serialport:command:sendNoReturn', {
-          //         room
-          //       });
-          //     }, 500 * this.index);
-          //     this.index++;
-          //   }
-          // }
+          if (a.type === 'modified' && room.emitter === 'web') {
+            // Si el valor modificado es diferente al anterior, cambia el estado
+            if (this.rooms.find(r => r.id === id).value !== room.value) {
+              console.log(room, Date.now());
+              this.ipc.send('serialport:command:sendNoReturn', {
+                room
+              });
+              this.index++;
+            }
+          }
           return room;
         })
       )
@@ -109,7 +109,6 @@ export class AppComponent implements OnInit, OnDestroy {
           });
         }
         this.waitingResponse = false;
-        console.log(this.waitingResponse);
         this.cdr.markForCheck();
       });
     });
@@ -119,7 +118,7 @@ export class AppComponent implements OnInit, OnDestroy {
         this.loraMode = true;
         setTimeout(() => {
           this.turnOnAll();
-        }, 500);
+        }, intervalCommands);
       });
     });
     this.ipc.send('serialport:list:action');
@@ -150,7 +149,8 @@ export class AppComponent implements OnInit, OnDestroy {
       room.value = false;
       array[index].value = false;
       this.roomsCollection.doc(room.id).update({
-        value: false
+        value: false,
+        emitter: 'local'
       });
       return room;
     });
@@ -168,7 +168,8 @@ export class AppComponent implements OnInit, OnDestroy {
       room.value = true;
       array[index].value = true;
       this.roomsCollection.doc(room.id).update({
-        value: true
+        value: true,
+        emitter: 'local'
       });
       return room;
     });
