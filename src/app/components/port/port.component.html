@@ -1,3 +1,1 @@
-<button mat-stroked-button class="port" (click)="connect()">
-  {{ port.comName }}
-</button>
+<button mat-stroked-button class="port" (click)="connect()">{{ port.comName || port.path }}</button>

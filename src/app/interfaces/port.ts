@@ -6,4 +6,5 @@ export interface Port {
   locationId: string;
   vendorId: string;
   productId: string;
+  path: string;
 }

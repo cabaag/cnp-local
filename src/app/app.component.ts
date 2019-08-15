@@ -70,6 +70,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.ipc.on('serialport:list:result', (event, args: { ports: Port[] }) => {
+      console.log(args)
       this.ngZone.run(() => {
         this.ports = args.ports;
       });
