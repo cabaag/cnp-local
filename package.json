@@ -21,7 +21,7 @@
     "ngx-electron": "^2.1.1",
     "ngx-webstorage": "^4.0.1",
     "rxjs": "~6.4.0",
-    "serialport": "^7.1.5",
+    "serialport": "8",
     "tslib": "^1.9.0",
     "zone.js": "~0.9.1"
   },
@@ -36,7 +36,7 @@
     "@types/serialport": "^7.0.4",
     "codelyzer": "^5.0.0",
     "codesign": "0.0.9",
-    "electron": "^6.0.0",
+    "electron": "^6.0.2",
     "electron-builder": "^21.1.5",
     "electron-packager": "^14.0.4",
     "electron-reload": "^1.4.1",
@@ -53,6 +53,9 @@
     "tslint": "~5.15.0",
     "typescript": "~3.4.3",
     "wait-on": "^3.3.0"
+  },
+  "engines": {
+    "node": ">=10.9.0"
   },
   "main": "main.js",
   "name": "cnp",
@@ -72,17 +75,14 @@
     "ng": "ng",
     "ng:serve": "ng serve",
     "ng:serve:web": "npm run postinstall:web && ng serve -o",
+    "package:mac": "electron-packager . --platform=darwin --icon=./dist/favicon.icns --force",
+    "package:win": "electron-packager . --platform=win32 --icon=./dist/favicon.ico --force",
     "postinstall": "npm run postinstall:electron && electron-builder install-app-deps",
     "postinstall:electron": "node postinstall",
     "postinstall:web": "node postinstall-web",
     "start": "npm run postinstall:electron && npm-run-all -p ng:serve electron:serve",
     "test": "npm run postinstall:web && ng test",
-    "version": "conventional-changelog -i CHANGELOG.md -s -r 0 && git add CHANGELOG.md",
-    "package:win": "electron-packager . --platform=win32 --icon=./dist/favicon.ico --force",
-    "package:mac": "electron-packager . --platform=darwin --icon=./dist/favicon.icns --force"
+    "version": "conventional-changelog -i CHANGELOG.md -s -r 0 && git add CHANGELOG.md"
   },
-  "version": "0.0.2",
-  "engines": {
-    "node": ">=10.9.0"
-  }
+  "version": "0.0.3"
 }

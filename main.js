@@ -10,8 +10,7 @@ var serve;
 var retryConnection = 0;
 var argsRoot = process.argv.slice(1);
 serve = argsRoot.some(function (val) { return val === '--serve'; });
-var commands = [];
-var intervalCommands = 1000;
+var intervalCommands = 700;
 function createWindow() {
     mainWindow = new electron_1.BrowserWindow({
         width: 800,
@@ -94,7 +93,6 @@ electron_1.ipcMain.on('serialport:command:sendNoReturn', function (event, args) 
     var room = args[0].room;
     var active = room.value ? 1 : 0;
     var command = "at+txc=1,1000," + room.node + "0000000" + active + "\r\n";
-    commands.push(command);
     if (!!port) {
         port.write(command);
         console.log('drain');
