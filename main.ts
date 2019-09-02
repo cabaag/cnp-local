@@ -1,9 +1,10 @@
-import { app, BrowserWindow, ipcMain, IpcMainEvent, ipcRenderer } from 'electron';
+import {app, BrowserWindow, dialog, ipcMain, IpcMainEvent} from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 import * as SerialPort from 'serialport';
-let port: SerialPort;
+import * as XLSX from 'xlsx';
 
+let port: SerialPort;
 let mainWindow: BrowserWindow;
 let serve;
 let retryConnection = 0;
@@ -15,7 +16,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    webPreferences: { nodeIntegration: true, webSecurity: false }
+    webPreferences: {nodeIntegration: true, webSecurity: false}
   });
 
   if (serve) {
@@ -58,9 +59,9 @@ app.on('activate', () => {
 });
 
 ipcMain.on('serialport:port:connect', (event: IpcMainEvent, args) => {
-  const comName = args[0];
+  const pathPort = args[0];
   retryConnection = 0;
-  openPort(comName, event);
+  openPort(pathPort, event);
 });
 
 ipcMain.on('serialport:port:close', (event: IpcMainEvent, args) => {
@@ -127,19 +128,48 @@ ipcMain.on('serialport:command:send', (event, args: [{ room: any }]) => {
   }
 });
 
-function openPort(comName: string, event: IpcMainEvent) {
+ipcMain.on('utils:downloadHistory', async (event, args: any) => {
+  const data: [{
+    date: string,
+    value: number
+  }] = args[0];
+  const parsed = data.map(d => [
+    d.date,
+    d.value.toFixed(2)
+  ]);
+
+  const XTENSION = 'xls|xlsx|xlsm|xlsb|xml|csv'.split('|');
+
+  const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet([['Fecha']['Descarga(Mb)'], ...parsed]);
+  const wb: XLSX.WorkBook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Historial');
+
+  /* show a file-save dialog and write the workbook */
+  const file = await dialog.showSaveDialog({
+    title: 'Guardar historial',
+    filters: [{
+      name: 'Spreadsheets',
+      extensions: XTENSION
+    }]
+  });
+
+  XLSX.writeFile(wb, file.filePath);
+  await dialog.showMessageBox({message: 'Historial guardado', buttons: ['OK']});
+});
+
+function openPort(pathPort: string, event: IpcMainEvent) {
   retryConnection++;
-  port = new SerialPort(comName, {
+  port = new SerialPort(pathPort, {
     baudRate: 115200,
     lock: false
   })
     .on('open', () => {
-      console.log(`[${comName}]: opened`);
+      console.log(`[${pathPort}]: opened`);
       port.set({
         dtr: true,
         dsr: true
       });
-      event.reply('serialport:port:open', comName);
+      event.reply('serialport:port:open', pathPort);
     })
     .on('data', data => {
       // console.log(`[${comName}]: data: ${Buffer.from(data).toString()}, ${Date.now()}`);
@@ -156,7 +186,7 @@ function openPort(comName: string, event: IpcMainEvent) {
       }
 
       if (err.message.includes('Error Resource temporarily unavailable') && retryConnection < 3) {
-        return openPort(comName, event);
+        return openPort(pathPort, event);
       }
 
       if (err.message.includes('No such file or directory')) {

@@ -1,0 +1,28 @@
+.cards-container {
+  overflow: hidden;
+}
+
+mat-card-header {
+  display: flex;
+  flex-direction: row;
+}
+
+ngx-charts-line-chart {
+  height: 300px;
+  width: 100%;
+  display: block;
+}
+
+.measuring {
+  animation: rotating 1s infinite;
+}
+
+@keyframes rotating {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}

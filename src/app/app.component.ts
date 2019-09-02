@@ -76,9 +76,9 @@ export class AppComponent implements OnInit, OnDestroy {
       });
     });
 
-    this.ipc.on('serialport:port:open', (event, comName: string) => {
+    this.ipc.on('serialport:port:open', (event, path: string) => {
       this.ngZone.run(() => {
-        this.selectedPort = comName;
+        this.selectedPort = path;
         this.matSnackbar.open('Puerto conectado', null, {
           duration: 3000,
           verticalPosition: 'bottom',

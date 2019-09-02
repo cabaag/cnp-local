@@ -16,7 +16,7 @@ export class PortComponent implements OnInit {
   ngOnInit() {}
 
   connect() {
-    this.ipc.send('serialport:port:connect', this.port.comName);
-    this.storage.store('port', this.port.comName);
+    this.ipc.send('serialport:port:connect', this.port.path);
+    this.storage.store('port', this.port.path);
   }
 }
