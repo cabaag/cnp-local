@@ -7,8 +7,8 @@ import { Port } from './interfaces/port';
 import { Room } from './interfaces/room';
 import { LocalStorageService } from 'ngx-webstorage';
 import { MatSnackBar } from '@angular/material';
-
-const intervalCommands = 700;
+import {PresenceService} from './services/presence.service';
+const intervalCommands = 900;
 
 @Component({
   selector: 'app-root',
@@ -33,7 +33,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private firestore: AngularFirestore,
     private storage: LocalStorageService,
     private cdr: ChangeDetectorRef,
-    private matSnackbar: MatSnackBar
+    private matSnackbar: MatSnackBar,
+    private presence: PresenceService
   ) {
     this.selectedPort = this.storage.retrieve('port');
     if (this.selectedPort) {
@@ -66,11 +67,11 @@ export class AppComponent implements OnInit, OnDestroy {
     this.roomsObs.subscribe(r => {
       this.rooms = r;
     });
+
   }
 
   ngOnInit() {
     this.ipc.on('serialport:list:result', (event, args: { ports: Port[] }) => {
-      console.log(args)
       this.ngZone.run(() => {
         this.ports = args.ports;
       });
@@ -103,7 +104,6 @@ export class AppComponent implements OnInit, OnDestroy {
     this.ipc.on('serialport:command:result', (event, args: Room) => {
       this.ngZone.run(() => {
         const room = args;
-        console.log('Receiving', room);
         if (room) {
           this.firestore.doc<Room>('rooms/' + room.id).update({
             value: room.value
@@ -117,16 +117,15 @@ export class AppComponent implements OnInit, OnDestroy {
     this.ipc.on('serialport:port:welcome', () => {
       this.ngZone.run(() => {
         this.loraMode = true;
-        setTimeout(() => {
-          this.turnOnAll();
-        }, intervalCommands);
       });
     });
     this.ipc.send('serialport:list:action');
+    this.presence.signIn();
   }
 
   ngOnDestroy() {
     this.alive = false;
+    this.presence.signOut();
     this.ipc.send('serialport:port:close');
   }
 
@@ -180,4 +179,5 @@ export class AppComponent implements OnInit, OnDestroy {
     this.waitingResponse = true;
     this.cdr.markForCheck();
   }
+
 }

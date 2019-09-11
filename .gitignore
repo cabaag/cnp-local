@@ -12,6 +12,7 @@ src/**/*.js
 !src/karma.conf.js
 *.js.map
 cnp-darwin-x64
+cnp-linux-x64
 
 # dependencies
 /node_modules

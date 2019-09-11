@@ -10,7 +10,7 @@ let serve;
 let retryConnection = 0;
 const argsRoot = process.argv.slice(1);
 serve = argsRoot.some(val => val === '--serve');
-const intervalCommands = 700;
+const intervalCommands = 900;
 
 function createWindow() {
   mainWindow = new BrowserWindow({

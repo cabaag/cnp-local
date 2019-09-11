@@ -22,6 +22,8 @@ import {PortComponent} from './components/port/port.component';
 import {RoomComponent} from './components/room/room.component';
 import {InternetComponent} from './components/internet/internet.component';
 import {NgxChartsModule} from '@swimlane/ngx-charts';
+import {PresenceService} from './services/presence.service';
+import {AngularFireDatabaseModule} from '@angular/fire/database';
 
 @NgModule({
   declarations: [AppComponent, RoomComponent, PortComponent, InternetComponent],
@@ -32,6 +34,7 @@ import {NgxChartsModule} from '@swimlane/ngx-charts';
     NgxWebstorageModule.forRoot({prefix: 'cnp', separator: '.'}),
     AngularFireModule.initializeApp(environment.firebase, 'cnpachuca'),
     AngularFirestoreModule.enablePersistence(),
+    AngularFireDatabaseModule,
     NgxElectronModule,
     NgxChartsModule,
     FlexLayoutModule,
@@ -45,7 +48,7 @@ import {NgxChartsModule} from '@swimlane/ngx-charts';
     MatToolbarModule,
     MatProgressSpinnerModule
   ],
-  providers: [IpcService],
+  providers: [IpcService, PresenceService],
   bootstrap: [AppComponent]
 })
 export class AppModule {
