@@ -120,12 +120,12 @@ export class AppComponent implements OnInit, OnDestroy {
       });
     });
     this.ipc.send('serialport:list:action');
-    this.presence.signIn();
+    // this.presence.signIn();
   }
 
   ngOnDestroy() {
     this.alive = false;
-    this.presence.signOut();
+    // this.presence.signOut();
     this.ipc.send('serialport:port:close');
   }
 

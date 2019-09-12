@@ -47,7 +47,7 @@ var serve;
 var retryConnection = 0;
 var argsRoot = process.argv.slice(1);
 serve = argsRoot.some(function (val) { return val === '--serve'; });
-var intervalCommands = 700;
+var intervalCommands = 900;
 function createWindow() {
     mainWindow = new electron_1.BrowserWindow({
         width: 800,
