@@ -7,7 +7,6 @@ import { Port } from './interfaces/port';
 import { Room } from './interfaces/room';
 import { LocalStorageService } from 'ngx-webstorage';
 import { MatSnackBar } from '@angular/material';
-import {PresenceService} from './services/presence.service';
 const intervalCommands = 900;
 
 @Component({
@@ -33,8 +32,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private firestore: AngularFirestore,
     private storage: LocalStorageService,
     private cdr: ChangeDetectorRef,
-    private matSnackbar: MatSnackBar,
-    private presence: PresenceService
+    private matSnackbar: MatSnackBar
   ) {
     this.selectedPort = this.storage.retrieve('port');
     if (this.selectedPort) {

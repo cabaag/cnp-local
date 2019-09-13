@@ -22,7 +22,6 @@ import {PortComponent} from './components/port/port.component';
 import {RoomComponent} from './components/room/room.component';
 import {InternetComponent} from './components/internet/internet.component';
 import {NgxChartsModule} from '@swimlane/ngx-charts';
-import {PresenceService} from './services/presence.service';
 import {AngularFireDatabaseModule} from '@angular/fire/database';
 import {AngularFireAuth} from '@angular/fire/auth';
 
@@ -49,7 +48,7 @@ import {AngularFireAuth} from '@angular/fire/auth';
     MatToolbarModule,
     MatProgressSpinnerModule
   ],
-  providers: [IpcService, PresenceService, AngularFireAuth],
+  providers: [IpcService, AngularFireAuth],
   bootstrap: [AppComponent]
 })
 export class AppModule {
