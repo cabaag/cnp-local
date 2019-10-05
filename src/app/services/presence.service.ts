@@ -1,9 +1,9 @@
 import {Injectable} from '@angular/core';
 import {first, map, switchMap, tap} from 'rxjs/operators';
 import {AngularFireDatabase} from '@angular/fire/database';
-import * as firebase from 'firebase/app';
 import {of} from 'rxjs';
 import {AngularFireAuth} from '@angular/fire/auth';
+import {database} from 'firebase';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +17,7 @@ export class PresenceService {
   }
 
   static get timestamp() {
-    return firebase.database.ServerValue.TIMESTAMP;
+    return database.ServerValue.TIMESTAMP;
   }
 
   getPresence(uid: string) {
@@ -42,7 +42,7 @@ export class PresenceService {
 
     return this.afAuth.authState.pipe(
       switchMap(user => user ? connection : of('offline')),
-      tap(status => this.setPresence(status))
+      tap(status => this.setPresence(status as string))
     );
   }
 
