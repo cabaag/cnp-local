@@ -25,7 +25,10 @@
   ],
   "linux": {
     "icon": "dist",
-    "target": ["AppImage"]
+    "target": [
+      "AppImage",
+      "deb"
+    ]
   },
   "mac": {
     "icon": "dist",

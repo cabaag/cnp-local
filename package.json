@@ -1,4 +1,8 @@
 {
+  "author":  {
+    "email": "caba9313@gmail.com",
+    "name": "Carlos Barranco"
+  },
   "browser": {
     "fs": false,
     "os": false,
@@ -70,7 +74,7 @@
     "build:dev": "npm run build -- -c dev",
     "build:prod": "npm run build -- -c production --base-href ./ && npm run electron:serve-tsc",
     "e2e": "npm run build:prod && mocha --timeout 300000 --require ts-node/register e2e/**/*.spec.ts",
-    "electron:linux": "npm run build:prod && electron-builder build --linux",
+    "electron:linux": "electron-builder build --linux --ia32",
     "electron:local": "npm run build:prod && electron .",
     "electron:mac": "npm run build:prod && electron-builder build --mac",
     "electron:serve": "wait-on http-get://localhost:4200/ && npm run electron:serve-tsc && electron . --serve",
