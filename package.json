@@ -44,7 +44,7 @@
     "@types/serialport": "^7.0.4",
     "codelyzer": "^5.0.0",
     "codesign": "0.0.9",
-    "electron": "^6.0.8",
+    "electron": "^7.2.4",
     "electron-builder": "^21.1.5",
     "electron-packager": "^14.0.4",
     "electron-reload": "^1.4.1",
